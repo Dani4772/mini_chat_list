@@ -44,3 +44,5 @@ flutter pub get
 flutter pub run build_runner build --delete-conflicting-outputs  # regenerate Hive adapter if models change
 flutter run
 ```
+<img width="1080" height="2400" alt="image" src="https://github.com/user-attachments/assets/09a4d446-e280-4f61-b1e2-bb3021a16742" />
+<img width="1080" height="2400" alt="image" src="https://github.com/user-attachments/assets/3b9dcde5-5063-406c-b777-21680dec8c5d" />
