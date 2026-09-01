@@ -1,17 +1,46 @@
-# mini_chat_list
+# Mini Chat List
 
-A new Flutter project.
+A small Flutter app that fetches posts from [JSONPlaceholder](https://jsonplaceholder.typicode.com/posts),
+displays them as a chat-style list, caches them locally with Hive, and supports
+pull-to-refresh, search/filter, and offline viewing.
 
-## Getting Started
+## What's built
 
-This project is a starting point for a Flutter application.
+- **State management:** Riverpod (`StateNotifier` + derived `Provider`s for filtering).
+- **Architecture:** Feature-first, layered as `domain` (entities + repository
+  contract) → `data` (models, remote/local datasources, repository impl) →
+  `presentation` (providers, screens, widgets). UI never talks to Dio or Hive
+  directly — only to the repository interface.
+- **Offline-first caching:** The repository checks real connectivity
+  (`connectivity_plus`) before deciding whether to hit the network at all.
+    - Online + API succeeds → fresh data shown, cache overwritten.
+    - Online + API fails → falls back to cache if any exists.
+    - Offline → skips the network call, reads cache directly.
+    - In both fallback cases, the UI shows a visible "Offline — showing last
+      saved data" banner rather than silently presenting stale data as live.
+    - If there's no cache and no connection, a distinct error state with a
+      retry button is shown — not a blank screen or raw exception.
+- **States:** Loading, error (with retry), empty (with different messaging
+  for "no data" vs "no search matches"), and populated are each their own
+  widget.
+- **Search:** Client-side filter over title + body, live as you type.
 
-A few resources to get you started if this is your first Flutter project:
+## Assumptions
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+- JSONPlaceholder has no real timestamp field, so `fetchedAt` (used for the
+  timestamp display) is set to the moment data was fetched, not a
+  server-provided time.
+- "Sender" in the spec is mapped to `title` and "message body" to `body`,
+  since JSONPlaceholder's `/posts` endpoint doesn't model a chat sender.
+- Cache is a full overwrite on each successful fetch, not a merge/diff —
+  acceptable for MVP scope with a small, non-paginated list.
+- No pagination was implemented since JSONPlaceholder returns all 100 posts
+  in one call and the spec didn't ask for infinite scroll.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Running
+
+```bash
+flutter pub get
+flutter pub run build_runner build --delete-conflicting-outputs  # regenerate Hive adapter if models change
+flutter run
+```
